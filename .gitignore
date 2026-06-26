@@ -1,0 +1,26 @@
+# Environment variables
+.env
+
+# Virtual environment
+.venv/
+
+# Build artifacts
+*.egg-info/
+
+#Data & models
+*.db
+
+# Python
+__pycache__/
+
+# Mlflow
+.mlflow/
+
+# Qdrant
+qdrant_storage/
+
+# Logs
+*.log
+
+# streamlit
+.streamlit/

@@ -1,0 +1,47 @@
+[project]
+name = "ragnarok"
+version = "0.1.0"
+description = "Enterprise multi-format RAG platform"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "pydantic-settings>=2.4"
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.6",
+    "mypy>=1.11",
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "pre-commit>=3.8"
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = [
+    "E",  # All errors
+    "F",  # All pyflakes codes
+    "I",  # All import-related codes
+    "UP",  # All unused codes
+    "B",  # All flake8-bugbear codes
+]
+
+[tool.mypy]
+python_version = 3.11
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["backend/tests"]
+asyncio_mode = "auto"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["backend*"]
