@@ -24,3 +24,6 @@ qdrant_storage/
 
 # streamlit
 .streamlit/
+
+# Uploads
+data/uploads/
