@@ -1,5 +1,7 @@
 from enum import Enum
 
+from backend.app.ingestion.extractors.pdf_extractor import extract_pdf
+
 
 class UnsupportedFileTypeError(Exception):
     """Custom exception for unsupported file types."""
@@ -27,5 +29,7 @@ class DocumentLoaderFactory:
             raise UnsupportedFileTypeError(f"Unsupported file type: .{extension}") from None
 
     @staticmethod
-    def load(file_path: str, document_type: DocumentType):
-        raise NotImplementedError(f"Loader for {document_type} not yet implemented — see Phase 2")
+    def load(file_path: str, document_type: DocumentType) -> list[dict]:
+        if document_type == DocumentType.PDF:
+            return extract_pdf(file_path)
+        raise NotImplementedError(f"Loader for {document_type} not yet implemented")
