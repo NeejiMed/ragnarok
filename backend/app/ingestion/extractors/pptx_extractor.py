@@ -1,5 +1,5 @@
 from pptx import Presentation
-from pptx.util import Pt
+
 
 def extract_pptx(file_path: str) -> list[dict]:
     """
@@ -18,20 +18,17 @@ def extract_pptx(file_path: str) -> list[dict]:
             combined += f"\n\n[Speaker notes]\n{notes_text}"
 
         results.append(
-            {
-                "content": combined.strip(),
-                "page": slide_number,
-                "extraction_method": "native"
-            }
+            {"content": combined.strip(), "page": slide_number, "extraction_method": "native"}
         )
 
     return results
+
 
 def _extract_slide_text(slide) -> str:
     """
     Extracts text from all shapes in a slide.
     """
-    texts= []
+    texts = []
     for shape in slide.shapes:
         if not shape.has_text_frame:
             continue
@@ -40,6 +37,7 @@ def _extract_slide_text(slide) -> str:
             if line:
                 texts.append(line)
     return "\n".join(texts)
+
 
 def _extract_notes(slide) -> str:
     """
@@ -52,7 +50,5 @@ def _extract_notes(slide) -> str:
     if not notes_frame:
         return ""
     return "\n".join(
-        paragraph.text.strip()
-        for paragraph in notes_frame.paragraphs
-        if paragraph.text.strip()
+        paragraph.text.strip() for paragraph in notes_frame.paragraphs if paragraph.text.strip()
     )
