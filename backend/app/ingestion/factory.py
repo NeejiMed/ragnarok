@@ -2,6 +2,7 @@ from enum import Enum
 
 from backend.app.ingestion.extractors.docx_extractor import extract_docx
 from backend.app.ingestion.extractors.pdf_extractor import extract_pdf
+from backend.app.ingestion.extractors.pptx_extractor import extract_pptx
 
 
 class UnsupportedFileTypeError(Exception):
@@ -35,4 +36,6 @@ class DocumentLoaderFactory:
             return extract_pdf(file_path)
         if document_type == DocumentType.DOCX:
             return extract_docx(file_path)
+        if document_type == DocumentType.PPTX:
+            return extract_pptx(file_path)
         raise NotImplementedError(f"Loader for {document_type} not yet implemented")
