@@ -14,7 +14,12 @@ dependencies = [
     "python-pptx>=1.0",
     "pandas>=2.2",
     "beautifulsoup4>=4.12",
-    "lxml>=5.2"
+    "lxml>=5.2",
+    "langchain>=0.3",
+    "langchain-community>=0.3",
+    "langchain-experimental>=0.3",
+    "sentence-transformers>=3.0",
+    "langchain-text-splitters>=0.3"
 ]
 
 [project.optional-dependencies]
@@ -47,6 +52,10 @@ ignore_missing_imports = true
 [tool.pytest.ini_options]
 testpaths = ["backend/tests"]
 asyncio_mode = "auto"
+markers = [
+    "slow: marks tests as slow running (deselect with '-m not slow')",
+    "integration: marks tests requiring external services",
+]
 
 [build-system]
 requires = ["setuptools>=68"]
