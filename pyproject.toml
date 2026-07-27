@@ -19,7 +19,8 @@ dependencies = [
     "langchain-community>=0.3",
     "langchain-experimental>=0.3",
     "sentence-transformers>=3.0",
-    "langchain-text-splitters>=0.3"
+    "langchain-text-splitters>=0.3",
+    "scikit-learn>=1.5"
 ]
 
 [project.optional-dependencies]
