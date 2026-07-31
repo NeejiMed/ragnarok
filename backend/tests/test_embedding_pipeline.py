@@ -50,7 +50,7 @@ def test_embed_returns_correct_count(embedded_chunks, document_chunks):
 
 @pytest.mark.slow
 def test_embedded_chunk_fields_match_input(embedded_chunks, document_chunks, embedding_pipeline):
-    for embedded, original in zip(embedded_chunks, document_chunks):
+    for embedded, original in zip(embedded_chunks, document_chunks, strict=False):
         assert embedded.chunk_id == original.chunk_id
         assert embedded.document_id == original.document_id
         assert embedded.content == original.content
@@ -77,6 +77,7 @@ def test_embed_empty_list(embedding_pipeline):
 @pytest.mark.slow
 def test_semantic_similarity_sanity(embedding_pipeline):
     """Similar sentences should have higher cosine similarity than dissimilar ones."""
+
     def make_chunk(chunk_id, doc_id, text, index):
         return DocumentChunk(
             chunk_id=chunk_id,
@@ -87,19 +88,23 @@ def test_semantic_similarity_sanity(embedding_pipeline):
             metadata={},
         )
 
-    similar = embedding_pipeline.embed([
-        make_chunk("s1", "doc1", "The cat sat on the mat.", 0),
-        make_chunk("s2", "doc1", "A cat is sitting on a mat.", 1),
-    ])
+    similar = embedding_pipeline.embed(
+        [
+            make_chunk("s1", "doc1", "The cat sat on the mat.", 0),
+            make_chunk("s2", "doc1", "A cat is sitting on a mat.", 1),
+        ]
+    )
 
-    dissimilar = embedding_pipeline.embed([
-        make_chunk("d1", "doc2", "The cat sat on the mat.", 0),
-        make_chunk("d2", "doc2", "The sun is shining brightly.", 1),
-    ])
+    dissimilar = embedding_pipeline.embed(
+        [
+            make_chunk("d1", "doc2", "The cat sat on the mat.", 0),
+            make_chunk("d2", "doc2", "The sun is shining brightly.", 1),
+        ]
+    )
 
     sim_score = cosine_similarity(similar[0].embedding, similar[1].embedding)
     dissim_score = cosine_similarity(dissimilar[0].embedding, dissimilar[1].embedding)
 
-    assert sim_score > dissim_score, (
-        f"Expected similar pair ({sim_score:.3f}) > dissimilar pair ({dissim_score:.3f})"
-    )
+    assert (
+        sim_score > dissim_score
+    ), f"Expected similar pair ({sim_score:.3f}) > dissimilar pair ({dissim_score:.3f})"
