@@ -20,7 +20,8 @@ dependencies = [
     "langchain-experimental>=0.3",
     "sentence-transformers>=3.0",
     "langchain-text-splitters>=0.3",
-    "scikit-learn>=1.5"
+    "scikit-learn>=1.5",
+    "qdrant-client>=1.9"
 ]
 
 [project.optional-dependencies]

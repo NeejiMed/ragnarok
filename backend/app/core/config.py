@@ -8,6 +8,9 @@ class Settings(BaseSettings):
     ocr_min_text_threshold: int = 20  # chars; below this, treat page as "no text"
     embedding_model: str = "BAAI/bge-small-en-v1.5"
     embedding_batch_size: int = 32
+    qdrant_host: str = "localhost"
+    qdrant_port: int = 6333
+    qdrant_collection: str = "ragnarok_documents"
 
     model_config = SettingsConfigDict(env_file=".env")
 
