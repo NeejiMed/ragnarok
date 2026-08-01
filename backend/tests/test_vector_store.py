@@ -1,159 +1,111 @@
 from uuid import uuid4
 
+import numpy as np
+import pytest
+
 from backend.app.embeddings.schemas import EmbeddedChunk
 from backend.app.vectorstore.store import VectorStore
 
 
-# Test ensuring collection creation to verify that the collection is created if it doesn't exist
-def test_ensure_collection_creates_collection():
-    # Create a VectorStore instance with a test collection name
-    test_collection_name = "test_collection"
-    vector_store = VectorStore(collection_name=test_collection_name)
+def make_test_chunk(content: str, document_id: str, index: int) -> EmbeddedChunk:
+    """Creates a normalized test EmbeddedChunk without needing the real embedding model."""
+    vector = np.random.rand(128)
+    vector = (vector / np.linalg.norm(vector)).tolist()
+    return EmbeddedChunk(
+        chunk_id=str(uuid4()),
+        embedding=vector,
+        content=content,
+        document_id=document_id,
+        chunk_index=index,
+        strategy="fixed",
+        embedding_model="test_model",
+        metadata={"source": "test_source"},
+    )
 
-    # Ensure the collection is created
+
+@pytest.fixture
+def vector_store():
+    """Creates a fresh isolated collection per test, deletes it after."""
+    collection_name = f"test_{uuid4().hex[:8]}"
+    store = VectorStore(collection_name=collection_name)
+    store.ensure_collection(embedding_dimension=128)
+    yield store
+    store.client.delete_collection(collection_name)
+
+
+@pytest.mark.integration
+def test_ensure_collection_creates_collection(vector_store):
+    existing = [c.name for c in vector_store.client.get_collections().collections]
+    assert vector_store.collection_name in existing
+
+
+@pytest.mark.integration
+def test_ensure_collection_is_idempotent(vector_store):
+    """Calling ensure_collection twice must not raise."""
     vector_store.ensure_collection(embedding_dimension=128)
-
-    # Verify that the collection now exists
-    existing_collections = [c.name for c in vector_store.client.get_collections().collections]
-    assert test_collection_name in existing_collections
+    existing = [c.name for c in vector_store.client.get_collections().collections]
+    assert vector_store.collection_name in existing
 
 
-# Test upsert with a list of EmbeddedChunks and returns the correct number of upserted chunks
-def test_upsert_inserts_chunks():
-    # Create a VectorStore instance with a test collection name
-    test_collection_name = "test_collection"
-    vector_store = VectorStore(collection_name=test_collection_name)
-
-    # Ensure the collection is created
-    vector_store.ensure_collection(embedding_dimension=128)
-
-    # Create a list of mock EmbeddedChunks
-    mock_chunks = [
-        EmbeddedChunk(
-            chunk_id=str(uuid4()),
-            embedding=[0.1] * 128,
-            content="This is the content of chunk 1.",
-            document_id="doc1",
-            chunk_index=0,
-            strategy="fixed",
-            embedding_model="test_model",
-            metadata={"source": "test_source"},
-        ),
-        EmbeddedChunk(
-            chunk_id=str(uuid4()),
-            embedding=[0.2] * 128,
-            content="This is the content of chunk 2.",
-            document_id="doc1",
-            chunk_index=1,
-            strategy="fixed",
-            embedding_model="test_model",
-            metadata={"source": "test_source"},
-        ),
+@pytest.mark.integration
+def test_upsert_returns_correct_count(vector_store):
+    chunks = [
+        make_test_chunk("Content of chunk 1.", "doc1", 0),
+        make_test_chunk("Content of chunk 2.", "doc1", 1),
     ]
-
-    # Upsert the mock chunks
-    num_upserted = vector_store.upsert(mock_chunks)
-
-    # Verify that the number of upserted chunks is correct
-    assert num_upserted == len(mock_chunks)
+    assert vector_store.upsert(chunks) == 2
 
 
-# Test search return results, each result has content and score fields
-def test_search_returns_results():
-    # Create a VectorStore instance with a test collection name
-    test_collection_name = "test_collection"
-    vector_store = VectorStore(collection_name=test_collection_name)
-
-    # Ensure the collection is created
-    vector_store.ensure_collection(embedding_dimension=128)
-
-    # Create a list of mock EmbeddedChunks and upsert them
-    mock_chunks = [
-        EmbeddedChunk(
-            chunk_id=str(uuid4()),
-            embedding=[0.1] * 128,
-            content="This is the content of chunk 1.",
-            document_id="doc1",
-            chunk_index=0,
-            strategy="fixed",
-            embedding_model="test_model",
-            metadata={"source": "test_source"},
-        ),
-        EmbeddedChunk(
-            chunk_id=str(uuid4()),
-            embedding=[0.2] * 128,
-            content="This is the content of chunk 2.",
-            document_id="doc1",
-            chunk_index=1,
-            strategy="fixed",
-            embedding_model="test_model",
-            metadata={"source": "test_source"},
-        ),
+@pytest.mark.integration
+def test_search_returns_results_with_expected_fields(vector_store):
+    chunks = [
+        make_test_chunk("Content of chunk 1.", "doc1", 0),
+        make_test_chunk("Content of chunk 2.", "doc1", 1),
     ]
-    vector_store.upsert(mock_chunks)
+    vector_store.upsert(chunks)
 
-    # Perform a search with a query vector
-    query_vector = [0.15] * 128
+    query_vector = (np.ones(128) / np.linalg.norm(np.ones(128))).tolist()
     results = vector_store.search(query_vector=query_vector, top_k=2)
 
-    # Verify that results are returned and contain expected fields
     assert len(results) > 0
     for result in results:
         assert "content" in result
         assert "score" in result
 
 
-# Test search with a filter returns only results matching that filter
-def test_search_with_filter():
-    # Create a VectorStore instance with a test collection name
-    test_collection_name = "test_collection"
-    vector_store = VectorStore(collection_name=test_collection_name)
-
-    # Ensure the collection is created
-    vector_store.ensure_collection(embedding_dimension=128)
-
-    # Create a list of mock EmbeddedChunks and upsert them
-    mock_chunks = [
-        EmbeddedChunk(
-            chunk_id=str(uuid4()),
-            embedding=[0.1] * 128,
-            content="This is the content of chunk 1.",
-            document_id="doc1",
-            chunk_index=0,
-            strategy="fixed",
-            embedding_model="test_model",
-            metadata={"source": "test_source"},
-        ),
-        EmbeddedChunk(
-            chunk_id=str(uuid4()),
-            embedding=[0.2] * 128,
-            content="This is the content of chunk 2.",
-            document_id="doc1",
-            chunk_index=1,
-            strategy="fixed",
-            embedding_model="test_model",
-            metadata={"source": "test_source"},
-        ),
+@pytest.mark.integration
+def test_search_with_filter_returns_matching_results(vector_store):
+    chunks = [
+        make_test_chunk("Doc A content.", "doc_a", 0),
+        make_test_chunk("Doc B content.", "doc_b", 0),
     ]
-    vector_store.upsert(mock_chunks)
+    vector_store.upsert(chunks)
 
-    # Perform a search with a query vector and a filter
-    query_vector = [0.15] * 128
-    filter_dict = {"source": "test_source"}
-    results = vector_store.search(query_vector=query_vector, top_k=2, filters=filter_dict)
+    query_vector = (np.ones(128) / np.linalg.norm(np.ones(128))).tolist()
+    results = vector_store.search(
+        query_vector=query_vector,
+        top_k=5,
+        filters={"document_id": "doc_a"},
+    )
 
-    # Verify that results are returned and contain expected fields
     assert len(results) > 0
     for result in results:
-        assert "content" in result
-        assert "score" in result
+        assert result["document_id"] == "doc_a"
 
 
-# Test delete_by_document_id removes all chunks associated with that document_id
-def test_delete_by_document_id():
-    # Create a VectorStore instance with a test collection name
-    test_collection_name = "test_collection"
-    vector_store = VectorStore(collection_name=test_collection_name)
+@pytest.mark.integration
+def test_delete_by_document_id_removes_chunks(vector_store):
+    chunks = [
+        make_test_chunk("Content 1.", "doc1", 0),
+        make_test_chunk("Content 2.", "doc1", 1),
+    ]
+    vector_store.upsert(chunks)
+    vector_store.delete_by_document_id("doc1")
 
-    # Ensure the collection is created
-    vector_store.ensure_collection(embedding_dimension=128)
+    query_vector = (np.ones(128) / np.linalg.norm(np.ones(128))).tolist()
+    results = vector_store.search(
+        query_vector=query_vector,
+        top_k=5,
+        filters={"document_id": "doc1"},
+    )
+    assert len(results) == 0
