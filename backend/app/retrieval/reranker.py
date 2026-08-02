@@ -2,6 +2,7 @@ from sentence_transformers import CrossEncoder
 
 DEFAULT_RERANK_MODEL = "cross-encoder/ms-marco-MiniLM-L-6-v2"
 
+
 class Reranker:
     """
     Layer 3: Re-scores retrieved chunks using a cross-encoder model to improve relevance.
@@ -14,12 +15,7 @@ class Reranker:
         self.model = CrossEncoder(model_name)
         self.model_name = model_name
 
-    def rerank(
-            self,
-            query: str,
-            results: list[dict],
-            top_k: int = 5
-    ) -> list[dict]:
+    def rerank(self, query: str, results: list[dict], top_k: int = 5) -> list[dict]:
         """
         Re-scores results using cross-encoder model and returns top-K most relevant chunks.
         """
@@ -32,7 +28,7 @@ class Reranker:
         scores = self.model.predict(pairs)
 
         # Attach scores to results
-        for result, score in zip(results, scores):
+        for result, score in zip(results, scores, strict=False):
             result["rerank_score"] = float(score)
 
         # Sort by rerank_score descending and return top-K

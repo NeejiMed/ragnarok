@@ -16,7 +16,7 @@ from backend.app.embeddings.schemas import EmbeddedChunk
 class VectorStore:
     """
     Manages persistence and retrieval of EmbeddedChunks in Qdrant.
-    One instance per application — holds the Qdrant client connection.
+    One instance per application  holds the Qdrant client connection.
     """
 
     def __init__(
@@ -24,14 +24,21 @@ class VectorStore:
         host: str = settings.qdrant_host,
         port: int = settings.qdrant_port,
         collection_name: str = settings.qdrant_collection,
+        client: QdrantClient | None = None,
     ):
-        self.client = QdrantClient(host=host, port=port)
+        if client is not None:
+            self.client = client
+        else:
+            self.client = QdrantClient(
+                url=f"http://{host}:{port}",
+                prefer_grpc=False,
+            )
         self.collection_name = collection_name
 
     def ensure_collection(self, embedding_dimension: int) -> None:
         """
         Creates the Qdrant collection if it doesn't exist.
-        Safe to call on every startup — idempotent.
+        Safe to call on every startup  idempotent.
         """
         existing = [c.name for c in self.client.get_collections().collections]
         if self.collection_name not in existing:
@@ -108,7 +115,7 @@ class VectorStore:
     def delete_by_document_id(self, document_id: str) -> None:
         """
         Deletes all chunks belonging to a document.
-        Used when a document is re-uploaded — clean slate before re-embedding.
+        Used when a document is re-uploaded  clean slate before re-embedding.
         """
         self.client.delete(
             collection_name=self.collection_name,

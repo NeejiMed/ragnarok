@@ -24,22 +24,23 @@ def make_test_chunk(content: str, document_id: str, index: int) -> EmbeddedChunk
 
 
 @pytest.fixture
-def vector_store():
+def vector_store(in_memory_qdrant_client):
     """Creates a fresh isolated collection per test, deletes it after."""
     collection_name = f"test_{uuid4().hex[:8]}"
-    store = VectorStore(collection_name=collection_name)
+    store = VectorStore(
+        collection_name=collection_name,
+        client=in_memory_qdrant_client,
+    )
     store.ensure_collection(embedding_dimension=128)
     yield store
     store.client.delete_collection(collection_name)
 
 
-@pytest.mark.integration
 def test_ensure_collection_creates_collection(vector_store):
     existing = [c.name for c in vector_store.client.get_collections().collections]
     assert vector_store.collection_name in existing
 
 
-@pytest.mark.integration
 def test_ensure_collection_is_idempotent(vector_store):
     """Calling ensure_collection twice must not raise."""
     vector_store.ensure_collection(embedding_dimension=128)
@@ -47,7 +48,6 @@ def test_ensure_collection_is_idempotent(vector_store):
     assert vector_store.collection_name in existing
 
 
-@pytest.mark.integration
 def test_upsert_returns_correct_count(vector_store):
     chunks = [
         make_test_chunk("Content of chunk 1.", "doc1", 0),
@@ -56,7 +56,6 @@ def test_upsert_returns_correct_count(vector_store):
     assert vector_store.upsert(chunks) == 2
 
 
-@pytest.mark.integration
 def test_search_returns_results_with_expected_fields(vector_store):
     chunks = [
         make_test_chunk("Content of chunk 1.", "doc1", 0),
@@ -73,7 +72,6 @@ def test_search_returns_results_with_expected_fields(vector_store):
         assert "score" in result
 
 
-@pytest.mark.integration
 def test_search_with_filter_returns_matching_results(vector_store):
     chunks = [
         make_test_chunk("Doc A content.", "doc_a", 0),
@@ -93,7 +91,6 @@ def test_search_with_filter_returns_matching_results(vector_store):
         assert result["document_id"] == "doc_a"
 
 
-@pytest.mark.integration
 def test_delete_by_document_id_removes_chunks(vector_store):
     chunks = [
         make_test_chunk("Content 1.", "doc1", 0),
