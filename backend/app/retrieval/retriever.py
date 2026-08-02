@@ -1,6 +1,7 @@
-from backend.app.embeddings.pipeline import EmbeddingPipeline
 from backend.app.chunking.schemas import DocumentChunk
+from backend.app.embeddings.pipeline import EmbeddingPipeline
 from backend.app.vectorstore.store import VectorStore
+
 
 class Retriever:
     """
@@ -12,12 +13,7 @@ class Retriever:
         self.vector_store = vector_store
         self.embedding_pipeline = embedding_pipeline
 
-    def retrieve(
-        self,
-        query: str,
-        top_k: int = 5,
-        filters: dict | None = None
-    ) -> list[dict]:
+    def retrieve(self, query: str, top_k: int = 5, filters: dict | None = None) -> list[dict]:
         """
         Embeds the query and retrieves the top-K relevant chunks from Qdrant.
         Returns a list of playload dicts with similarity score.
@@ -29,13 +25,9 @@ class Retriever:
             content=query,
             chunk_index=0,
             strategy="query",
-            metadata={}
+            metadata={},
         )
         embedded = self.embedding_pipeline.embed([query_chunk])
         query_vector = embedded[0].embedding
 
-        return self.vector_store.search(
-            query_vector=query_vector,
-            top_k=top_k,
-            filters=filters
-        )
+        return self.vector_store.search(query_vector=query_vector, top_k=top_k, filters=filters)
