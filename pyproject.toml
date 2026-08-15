@@ -22,7 +22,8 @@ dependencies = [
     "langchain-text-splitters>=0.3",
     "scikit-learn>=1.5",
     "qdrant-client>=1.9",
-    "langchain-ollama>=0.2"
+    "langchain-ollama>=0.2",
+    "langgraph>=0.2"
 ]
 
 [project.optional-dependencies]

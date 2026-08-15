@@ -13,8 +13,9 @@ context:
 
 Question: {question}
 
-Answer:"""
+Answer:""",
 )
+
 
 def format_context(results: list[dict]) -> str:
     """

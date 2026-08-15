@@ -1,10 +1,9 @@
-from uuid import uuid4
 from unittest.mock import MagicMock, patch
+from uuid import uuid4
 
 import pytest
 
 from backend.app.chunking.schemas import DocumentChunk
-from backend.app.embeddings.pipeline import EmbeddingPipeline
 from backend.app.rag.pipeline import RAGPipeline
 from backend.app.rag.prompt import format_context
 from backend.app.rag.schemas import RAGRequest
@@ -67,6 +66,7 @@ def seeded_vector_store(vector_store, embedding_pipeline):
 
 # ── Pure unit tests ───────────────────────────────────────────────────────────
 
+
 def test_format_context_includes_source_citation():
     results = [
         {"source": "policy-handbook", "page": 3, "content": "Returns allowed within 30 days."},
@@ -90,14 +90,14 @@ def test_format_context_no_page_omits_page_field():
 
 # ── Integration + slow tests ──────────────────────────────────────────────────
 
-@pytest.mark.slow
-def test_rag_pipeline_returns_correct_response_shape(
-    seeded_vector_store, embedding_pipeline
-):
-    """Full pipeline with mocked LLM  tests orchestration, not LLM quality."""
-    with patch("backend.app.rag.pipeline.OllamaLLM") as mock_llm_class, \
-         patch("backend.app.rag.pipeline.Reranker") as mock_reranker_class:
 
+@pytest.mark.slow
+def test_rag_pipeline_returns_correct_response_shape(seeded_vector_store, embedding_pipeline):
+    """Full pipeline with mocked LLM  tests orchestration, not LLM quality."""
+    with (
+        patch("backend.app.rag.pipeline.OllamaLLM") as mock_llm_class,
+        patch("backend.app.rag.pipeline.Reranker") as mock_reranker_class,
+    ):
         mock_llm = MagicMock()
         mock_llm.invoke.return_value = "The refund window is 30 days."
         mock_llm_class.return_value = mock_llm
@@ -117,13 +117,12 @@ def test_rag_pipeline_returns_correct_response_shape(
 
 
 @pytest.mark.slow
-def test_rag_pipeline_llm_receives_context_in_prompt(
-    seeded_vector_store, embedding_pipeline
-):
+def test_rag_pipeline_llm_receives_context_in_prompt(seeded_vector_store, embedding_pipeline):
     """Retrieved content must actually reach the LLM prompt  not just be retrieved."""
-    with patch("backend.app.rag.pipeline.OllamaLLM") as mock_llm_class, \
-         patch("backend.app.rag.pipeline.Reranker") as mock_reranker_class:
-
+    with (
+        patch("backend.app.rag.pipeline.OllamaLLM") as mock_llm_class,
+        patch("backend.app.rag.pipeline.Reranker") as mock_reranker_class,
+    ):
         mock_llm = MagicMock()
         mock_llm.invoke.return_value = "Mocked answer."
         mock_llm_class.return_value = mock_llm
@@ -133,16 +132,12 @@ def test_rag_pipeline_llm_receives_context_in_prompt(
         pipeline.run(RAGRequest(question="What is the refund policy?"))
 
     actual_prompt = mock_llm.invoke.call_args[0][0]
-    assert "refund" in actual_prompt.lower(), (
-        "Refund policy content must appear in the LLM prompt"
-    )
+    assert "refund" in actual_prompt.lower(), "Refund policy content must appear in the LLM prompt"
     assert "What is the refund policy?" in actual_prompt
 
 
 @pytest.mark.slow
-def test_rag_pipeline_with_reranking_calls_reranker(
-    seeded_vector_store, embedding_pipeline
-):
+def test_rag_pipeline_with_reranking_calls_reranker(seeded_vector_store, embedding_pipeline):
     """use_reranking=True must invoke reranker and use rerank_score in response."""
     reranked_result = {
         "content": "The company refund policy allows returns within 30 days.",
@@ -153,9 +148,10 @@ def test_rag_pipeline_with_reranking_calls_reranker(
         "document_id": "refund-policy",
     }
 
-    with patch("backend.app.rag.pipeline.OllamaLLM") as mock_llm_class, \
-         patch("backend.app.rag.pipeline.Reranker") as mock_reranker_class:
-
+    with (
+        patch("backend.app.rag.pipeline.OllamaLLM") as mock_llm_class,
+        patch("backend.app.rag.pipeline.Reranker") as mock_reranker_class,
+    ):
         mock_llm = MagicMock()
         mock_llm.invoke.return_value = "The refund window is 30 days."
         mock_llm_class.return_value = mock_llm
@@ -183,13 +179,13 @@ def test_rag_pipeline_empty_retrieval_sends_fallback_in_prompt(
     Fallback instruction must appear IN THE PROMPT  not just in the answer.
     Tests that we control the instruction, not just observe the LLM's behavior.
     """
-    with patch("backend.app.rag.pipeline.OllamaLLM") as mock_llm_class, \
-         patch("backend.app.rag.pipeline.Reranker") as mock_reranker_class:
-
+    with (
+        patch("backend.app.rag.pipeline.OllamaLLM") as mock_llm_class,
+        patch("backend.app.rag.pipeline.Reranker") as mock_reranker_class,
+    ):
         mock_llm = MagicMock()
         mock_llm.invoke.return_value = (
-            "I don't have enough information in the available documents "
-            "to answer this question."
+            "I don't have enough information in the available documents " "to answer this question."
         )
         mock_llm_class.return_value = mock_llm
         mock_reranker_class.return_value = MagicMock()
