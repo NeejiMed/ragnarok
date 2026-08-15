@@ -1,10 +1,6 @@
 import sys
 from unittest.mock import MagicMock
 
-sys.modules["qdrant_client.connection"] = MagicMock()
-sys.modules["qdrant_client.async_qdrant_remote"] = MagicMock()
-sys.modules["qdrant_client.async_qdrant_client"] = MagicMock()
-
 # qdrant_client uses isinstance(point, grpc.PointStruct) at runtime
 # MagicMock instances can't be used as isinstance() second arg
 # so we provide real classes for the types that get isinstance-checked
@@ -21,19 +17,22 @@ class _FakeBatch:
 
 _qdrant_grpc.PointStruct = _FakePointStruct
 _qdrant_grpc.Batch = _FakeBatch
+sys.modules["qdrant_client.connection"] = MagicMock()
+sys.modules["qdrant_client.async_qdrant_remote"] = MagicMock()
+sys.modules["qdrant_client.async_qdrant_client"] = MagicMock()
+
 sys.modules["qdrant_client.grpc"] = _qdrant_grpc
 
-import pytest
-from qdrant_client import QdrantClient
+import pytest  # noqa: E402
+from qdrant_client import QdrantClient  # noqa: E402
 
-from backend.app.embeddings.pipeline import EmbeddingPipeline
-from backend.app.vectorstore.store import VectorStore
+from backend.app.embeddings.pipeline import EmbeddingPipeline  # noqa: E402
 
 
 @pytest.fixture(scope="session")
 def in_memory_qdrant_client():
     """
-    In-memory Qdrant — no Docker, no network, no grpc DLL.
+    In-memory Qdrant  no Docker, no network, no grpc DLL.
     Uses QdrantLocal internally which bypasses all transport modules.
     """
     return QdrantClient(":memory:")
