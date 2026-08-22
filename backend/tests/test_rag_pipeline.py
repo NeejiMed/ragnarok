@@ -64,7 +64,7 @@ def seeded_vector_store(vector_store, embedding_pipeline):
     return vector_store
 
 
-# ── Pure unit tests ───────────────────────────────────────────────────────────
+#  Pure unit tests
 
 
 def test_format_context_includes_source_citation():
@@ -88,7 +88,7 @@ def test_format_context_no_page_omits_page_field():
     assert "[Source 1: wiki]" in context
 
 
-# ── Integration + slow tests ──────────────────────────────────────────────────
+#  Integration + slow tests
 
 
 @pytest.mark.slow
