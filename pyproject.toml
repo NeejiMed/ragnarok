@@ -23,7 +23,8 @@ dependencies = [
     "scikit-learn>=1.5",
     "qdrant-client>=1.9",
     "langchain-ollama>=0.2",
-    "langgraph>=0.2"
+    "langgraph>=0.2",
+    "mlflow>=2.15"
 ]
 
 [project.optional-dependencies]

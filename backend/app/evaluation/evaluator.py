@@ -7,9 +7,11 @@ Metrics implemented:
 - Answer Relevance: does the answer address the question? (embedding similarity)
 - Context Recall: does the retrieved context contain the ground truth information?
 """
+
+from typing import cast
+
 import numpy as np
 from sentence_transformers import SentenceTransformer
-from typing import cast
 
 from backend.app.evaluation.schemas import (
     EvaluationReport,
@@ -62,13 +64,10 @@ def _score_faithfulness(
     all_texts = sentences + [context_text]
     embeddings = _embed(model, all_texts)
 
-    sentence_embeddings = embeddings[:len(sentences)]
+    sentence_embeddings = embeddings[: len(sentences)]
     context_embedding = embeddings[len(sentences)]
 
-    scores = [
-        _cosine_similarity(sent_emb, context_embedding)
-        for sent_emb in sentence_embeddings
-    ]
+    scores = [_cosine_similarity(sent_emb, context_embedding) for sent_emb in sentence_embeddings]
     return float(np.mean(scores))
 
 
@@ -111,8 +110,7 @@ def _score_context_recall(
     context_embeddings = embeddings[1:]
 
     similarities = [
-        _cosine_similarity(ground_truth_embedding, ctx_emb)
-        for ctx_emb in context_embeddings
+        _cosine_similarity(ground_truth_embedding, ctx_emb) for ctx_emb in context_embeddings
     ]
     return float(max(similarities))
 
@@ -144,25 +142,21 @@ class RAGEvaluator:
         sample_scores = []
 
         for sample in samples:
-            f = _score_faithfulness(
-                self.model, sample.generated_answer, sample.retrieved_contexts
-            )
-            r = _score_answer_relevancy(
-                self.model, sample.question, sample.generated_answer
-            )
-            c = _score_context_recall(
-                self.model, sample.ground_truth, sample.retrieved_contexts
-            )
+            f = _score_faithfulness(self.model, sample.generated_answer, sample.retrieved_contexts)
+            r = _score_answer_relevancy(self.model, sample.question, sample.generated_answer)
+            c = _score_context_recall(self.model, sample.ground_truth, sample.retrieved_contexts)
 
             faithfulness_scores.append(f)
             relevancy_scores.append(r)
             recall_scores.append(c)
-            sample_scores.append({
-                "question": sample.question,
-                "faithfulness": round(f, 4),
-                "answer_relevancy": round(r, 4),
-                "context_recall": round(c, 4),
-            })
+            sample_scores.append(
+                {
+                    "question": sample.question,
+                    "faithfulness": round(f, 4),
+                    "answer_relevancy": round(r, 4),
+                    "context_recall": round(c, 4),
+                }
+            )
 
         metric_results = [
             ("faithfulness", float(np.mean(faithfulness_scores))),

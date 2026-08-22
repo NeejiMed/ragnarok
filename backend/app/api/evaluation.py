@@ -1,6 +1,7 @@
+from fastapi import APIRouter, HTTPException
+
 from backend.app.evaluation.evaluator import RAGEvaluator
 from backend.app.evaluation.schemas import EvaluationReport, EvaluationSample
-from fastapi import APIRouter, HTTPException
 
 router = APIRouter(prefix="/evaluation", tags=["evaluation"])
 
