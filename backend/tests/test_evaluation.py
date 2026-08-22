@@ -1,23 +1,24 @@
-import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
-from backend.app.evaluation.schemas import (
-    EvaluationSample,
-    EvaluationReport,
-    MetricScore,
-)
+import numpy as np
+import pytest
+
 from backend.app.evaluation.evaluator import (
-    RAGEvaluator,
     DEFAULT_THRESHOLDS,
-    _score_faithfulness,
+    RAGEvaluator,
+    _cosine_similarity,
     _score_answer_relevancy,
     _score_context_recall,
-    _cosine_similarity,
+    _score_faithfulness,
 )
-import numpy as np
+from backend.app.evaluation.schemas import (
+    EvaluationReport,
+    EvaluationSample,
+    MetricScore,
+)
 
+#  Helpers
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
 
 def make_sample(
     question: str = "What is the refund policy?",
@@ -29,13 +30,13 @@ def make_sample(
         question=question,
         ground_truth=ground_truth,
         generated_answer=generated_answer,
-        retrieved_contexts=retrieved_contexts or [
-            "The company refund policy allows returns within 30 days of purchase."
-        ],
+        retrieved_contexts=retrieved_contexts
+        or ["The company refund policy allows returns within 30 days of purchase."],
     )
 
 
-# ── Pure unit tests: schemas ──────────────────────────────────────────────────
+#  Pure unit tests: schemas
+
 
 def test_evaluation_sample_schema_accepts_valid_input():
     sample = make_sample()
@@ -44,16 +45,12 @@ def test_evaluation_sample_schema_accepts_valid_input():
 
 
 def test_metric_score_pass_when_above_threshold():
-    metric = MetricScore(
-        name="faithfulness", score=0.85, passed=True, threshold=0.7
-    )
+    metric = MetricScore(name="faithfulness", score=0.85, passed=True, threshold=0.7)
     assert metric.passed is True
 
 
 def test_metric_score_fail_when_below_threshold():
-    metric = MetricScore(
-        name="faithfulness", score=0.55, passed=False, threshold=0.7
-    )
+    metric = MetricScore(name="faithfulness", score=0.55, passed=False, threshold=0.7)
     assert metric.passed is False
 
 
@@ -62,15 +59,9 @@ def test_evaluation_report_passed_overall_requires_all_metrics_pass():
     report = EvaluationReport(
         num_samples=1,
         metrics=[
-            MetricScore(
-                name="faithfulness", score=0.9, passed=True, threshold=0.7
-            ),
-            MetricScore(
-                name="answer_relevancy", score=0.4, passed=False, threshold=0.7
-            ),
-            MetricScore(
-                name="context_recall", score=0.8, passed=True, threshold=0.6
-            ),
+            MetricScore(name="faithfulness", score=0.9, passed=True, threshold=0.7),
+            MetricScore(name="answer_relevancy", score=0.4, passed=False, threshold=0.7),
+            MetricScore(name="context_recall", score=0.8, passed=True, threshold=0.6),
         ],
         sample_scores=[],
         passed_overall=False,
@@ -83,9 +74,9 @@ def test_default_thresholds_are_reasonable():
     required = {"faithfulness", "answer_relevancy", "context_recall"}
     assert required == set(DEFAULT_THRESHOLDS.keys())
     for name, threshold in DEFAULT_THRESHOLDS.items():
-        assert 0.0 < threshold < 1.0, (
-            f"Threshold for {name} must be between 0 and 1, got {threshold}"
-        )
+        assert (
+            0.0 < threshold < 1.0
+        ), f"Threshold for {name} must be between 0 and 1, got {threshold}"
 
 
 def test_cosine_similarity_identical_vectors():
@@ -110,7 +101,8 @@ def test_evaluator_raises_on_empty_samples():
         evaluator.evaluate([])
 
 
-# ── Slow tests: real embedding model ─────────────────────────────────────────
+#  Slow tests: real embedding model
+
 
 @pytest.mark.slow
 def test_faithfulness_high_for_grounded_answer(embedding_pipeline):
