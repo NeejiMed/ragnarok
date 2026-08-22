@@ -7,18 +7,19 @@ from backend.app.agents.nodes import (
     make_retrieve_node,
     make_retry_node,
     should_retry,
-    validate_node
+    validate_node,
 )
 from backend.app.agents.state import RAGAgentState
 from backend.app.embeddings.pipeline import EmbeddingPipeline
 from backend.app.vectorstore.store import VectorStore
 
+
 def build_rag_graph(
-        vector_store: VectorStore,
-        embedding_pipeline: EmbeddingPipeline,
-        llm_model: str = "llama3.2",
-        top_k: int = 5,
-        max_retries: int = 2
+    vector_store: VectorStore,
+    embedding_pipeline: EmbeddingPipeline,
+    llm_model: str = "llama3.2",
+    top_k: int = 5,
+    max_retries: int = 2,
 ):
     """
     Builds and compiles the RAG agent graph.
@@ -43,12 +44,12 @@ def build_rag_graph(
 
     # conditional edges based on validation result
     graph.add_conditional_edges(
-        "validate", 
-        should_retry, 
+        "validate",
+        should_retry,
         {
             "retry": "retry",
             "done": END,
-        }
+        },
     )
 
     # After retry, go back to retrieve
@@ -56,21 +57,20 @@ def build_rag_graph(
 
     return graph.compile()
 
+
 def run_rag_agent(
-        question: str,
-        vector_store: VectorStore,
-        embedding_pipeline: EmbeddingPipeline,
-        llm_model: str = "llama3.2",
-        top_k: int = 5,
-        max_retries: int = 2
+    question: str,
+    vector_store: VectorStore,
+    embedding_pipeline: EmbeddingPipeline,
+    llm_model: str = "llama3.2",
+    top_k: int = 5,
+    max_retries: int = 2,
 ) -> RAGAgentState:
     """
     Convenience function to build the graph and run it for one question.
     returns the final state object after the graph completes.
     """
-    app = build_rag_graph(
-        vector_store, embedding_pipeline, llm_model, top_k, max_retries
-    )
+    app = build_rag_graph(vector_store, embedding_pipeline, llm_model, top_k, max_retries)
 
     initial_state: RAGAgentState = {
         "question": question,
@@ -80,7 +80,7 @@ def run_rag_agent(
         "answer": "",
         "validation_result": "pending",
         "retry_count": 0,
-        "max_retries": max_retries
+        "max_retries": max_retries,
     }
 
     return cast(RAGAgentState, app.invoke(initial_state))

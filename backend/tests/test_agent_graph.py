@@ -1,17 +1,20 @@
+from typing import cast
 from unittest.mock import MagicMock, patch
 from uuid import uuid4
-from typing import cast
 
 import pytest
 
-from backend.app.agents.graph import build_rag_graph, run_rag_agent
-from backend.app.agents.nodes import validate_node
+from backend.app.agents.graph import run_rag_agent
+
+#  Pure unit tests: should_retry
+# These test a pure Python function  no fixtures, no mocks, instant.
+from backend.app.agents.nodes import should_retry, validate_node
 from backend.app.agents.state import RAGAgentState
 from backend.app.chunking.schemas import DocumentChunk
 from backend.app.vectorstore.store import VectorStore
 
+#  Helpers
 
-#  Helpers 
 
 def make_state(**overrides) -> RAGAgentState:
     """
@@ -40,7 +43,6 @@ def seeded_vector_store(in_memory_qdrant_client, embedding_pipeline):
     Vector store pre-seeded with one domain-realistic chunk.
     Used for full graph integration tests.
     """
-    from backend.app.chunking.schemas import DocumentChunk
 
     store = VectorStore(
         collection_name=f"test_agent_{uuid4().hex[:8]}",
@@ -61,12 +63,6 @@ def seeded_vector_store(in_memory_qdrant_client, embedding_pipeline):
     embedded = embedding_pipeline.embed(chunks)
     store.upsert(embedded)
     return store
-
-
-#  Pure unit tests: should_retry 
-# These test a pure Python function  no fixtures, no mocks, instant.
-
-from backend.app.agents.nodes import should_retry
 
 
 def test_should_retry_returns_done_when_pass():
@@ -96,7 +92,8 @@ def test_should_retry_returns_done_when_retries_exceeded():
     assert should_retry(state) == "done"
 
 
-#  Pure unit tests: validate_node 
+#  Pure unit tests: validate_node
+
 
 def test_validate_node_passes_confident_answer():
     """A specific, factual answer should pass validation."""
@@ -114,9 +111,7 @@ def test_validate_node_fails_on_i_dont_know():
 
 def test_validate_node_fails_on_no_information():
     """'I don't have enough information' is a known low-confidence signal."""
-    state = make_state(
-        answer="I don't have enough information in the available documents."
-    )
+    state = make_state(answer="I don't have enough information in the available documents.")
     result = validate_node(state)
     assert result["validation_result"] == "fail"
 
@@ -146,7 +141,8 @@ def test_validate_node_preserves_all_state_fields():
     assert result["validation_result"] == "pass"
 
 
-#  Integration + slow: full graph execution 
+#  Integration + slow: full graph execution
+
 
 @pytest.mark.slow
 def test_full_graph_confident_answer_no_retry(seeded_vector_store, embedding_pipeline):
@@ -204,9 +200,7 @@ def test_full_graph_low_confidence_triggers_retry(seeded_vector_store, embedding
 
 
 @pytest.mark.slow
-def test_full_graph_circuit_breaker_stops_infinite_retry(
-    seeded_vector_store, embedding_pipeline
-):
+def test_full_graph_circuit_breaker_stops_infinite_retry(seeded_vector_store, embedding_pipeline):
     """
     When LLM always returns low-confidence answers, the circuit breaker
     (max_retries) must terminate the graph instead of looping forever.
