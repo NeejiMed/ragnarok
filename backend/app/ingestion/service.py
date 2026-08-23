@@ -5,6 +5,7 @@ from pathlib import Path
 from fastapi import UploadFile
 
 from backend.app.core.config import settings
+from backend.app.core.metrics import DOCUMENTS_INGESTED
 from backend.app.ingestion.factory import DocumentLoaderFactory, UnsupportedFileTypeError
 from backend.app.ingestion.schemas import DocumentStatus, IngestedDocument
 
@@ -42,6 +43,7 @@ async def save_upload(file: UploadFile) -> IngestedDocument:
     upload_dir.mkdir(parents=True, exist_ok=True)
     saved_path = upload_dir / f"{document_id}_{file.filename}"
     saved_path.write_bytes(contents)
+    DOCUMENTS_INGESTED.labels(document_type=document_type.value).inc()
 
     # 4. Return our standardized schema, content stays empty until Phase 2 parses it
     return IngestedDocument(

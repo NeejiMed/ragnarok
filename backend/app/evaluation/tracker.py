@@ -1,13 +1,11 @@
-import json
-import time
 from contextlib import contextmanager
 from pathlib import Path
 
-from fastapi import params
 import mlflow
 
 from backend.app.core.config import settings
 from backend.app.evaluation.schemas import EvaluationReport
+
 
 class ExperimentTracker:
     """
@@ -22,9 +20,9 @@ class ExperimentTracker:
         self.experiment_name = experiment_name
 
     @contextmanager
-    def start_run(self, run_name:str, tags: dict | None = None):
+    def start_run(self, run_name: str, tags: dict | None = None):
         """
-        Context manager for a single experiment run. 
+        Context manager for a single experiment run.
         Automatically ends thee run on exit, even if an exception occurs.
         Usage:
             with tracker.start_run("recursive_chunking_test") as run:
@@ -32,7 +30,7 @@ class ExperimentTracker:
                 tracker.log_metrics({"accuracy": 0.78})
         """
         with mlflow.start_run(run_name=run_name, tags=tags or {}) as run:
-            yield run # yield the run object so the caller can access it if needed
+            yield run  # yield the run object so the caller can access it if needed
 
     def log_params(self, params: dict) -> None:
         """
@@ -68,6 +66,7 @@ class ExperimentTracker:
         """Logs any file as an artifact for the current run."""
         mlflow.log_artifact(file_path)
 
+
 def run_chunking_experiment(
     tracker: ExperimentTracker,
     strategy: str,
@@ -91,6 +90,7 @@ def run_chunking_experiment(
     with tracker.start_run(run_name=f"{strategy}_chunk{chunk_size}"):
         tracker.log_params(params)
         tracker.log_evaluation_report(evaluation_report)
+
 
 def run_embedding_experiment(
     tracker: ExperimentTracker,
