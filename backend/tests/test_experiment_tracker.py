@@ -1,5 +1,4 @@
-from unittest.mock import MagicMock, patch, call
-import pytest
+from unittest.mock import MagicMock, patch
 
 from backend.app.evaluation.schemas import EvaluationReport, MetricScore
 from backend.app.evaluation.tracker import (
@@ -22,7 +21,8 @@ def make_report(passed: bool = True) -> EvaluationReport:
     )
 
 
-#  Pure unit tests (mlflow fully mocked) 
+#  Pure unit tests (mlflow fully mocked)
+
 
 @patch("backend.app.evaluation.tracker.mlflow")
 def test_tracker_sets_tracking_uri_on_init(mock_mlflow):
@@ -36,9 +36,7 @@ def test_tracker_sets_tracking_uri_on_init(mock_mlflow):
 def test_log_params_delegates_to_mlflow(mock_mlflow):
     tracker = ExperimentTracker("test")
     tracker.log_params({"strategy": "recursive", "chunk_size": 500})
-    mock_mlflow.log_params.assert_called_once_with(
-        {"strategy": "recursive", "chunk_size": 500}
-    )
+    mock_mlflow.log_params.assert_called_once_with({"strategy": "recursive", "chunk_size": 500})
 
 
 @patch("backend.app.evaluation.tracker.mlflow")
@@ -60,10 +58,7 @@ def test_log_evaluation_report_logs_all_metric_scores(mock_mlflow):
     tracker.log_evaluation_report(report)
 
     # Check that log_metric was called for each metric + summary metrics
-    logged_metric_names = {
-        call_args[0][0]
-        for call_args in mock_mlflow.log_metric.call_args_list
-    }
+    logged_metric_names = {call_args[0][0] for call_args in mock_mlflow.log_metric.call_args_list}
     assert "faithfulness" in logged_metric_names
     assert "answer_relevancy" in logged_metric_names
     assert "context_recall" in logged_metric_names
@@ -112,15 +107,9 @@ def test_run_embedding_experiment_logs_model_name(mock_mlflow):
 
     # Verify latency logged as metric — check all log_metrics calls
     all_metric_dicts = [
-        call_args[0][0]
-        for call_args in mock_mlflow.log_metrics.call_args_list
-        if call_args[0]
+        call_args[0][0] for call_args in mock_mlflow.log_metrics.call_args_list if call_args[0]
     ]
-    latency_logged = any(
-        "retrieval_latency_ms" in metrics
-        for metrics in all_metric_dicts
-    )
+    latency_logged = any("retrieval_latency_ms" in metrics for metrics in all_metric_dicts)
     assert latency_logged, (
-        f"Expected retrieval_latency_ms in logged metrics. "
-        f"Got: {all_metric_dicts}"
+        f"Expected retrieval_latency_ms in logged metrics. " f"Got: {all_metric_dicts}"
     )
