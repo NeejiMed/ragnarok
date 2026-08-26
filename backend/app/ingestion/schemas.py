@@ -1,5 +1,5 @@
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel
@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from backend.app.ingestion.factory import DocumentType
 
 
-class DocumentStatus(str, Enum):
+class DocumentStatus(StrEnum):
     PENDING = "pending"
     PROCESSED = "processed"
     FAILED = "failed"

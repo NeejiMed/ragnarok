@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import StrEnum
 
 from backend.app.ingestion.extractors.csv_extractor import extract_csv
 from backend.app.ingestion.extractors.docx_extractor import extract_docx
@@ -13,7 +13,7 @@ class UnsupportedFileTypeError(Exception):
     pass
 
 
-class DocumentType(str, Enum):
+class DocumentType(StrEnum):
     PDF = "pdf"
     DOCX = "docx"
     PPTX = "pptx"
