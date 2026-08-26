@@ -74,9 +74,9 @@ def test_default_thresholds_are_reasonable():
     required = {"faithfulness", "answer_relevancy", "context_recall"}
     assert required == set(DEFAULT_THRESHOLDS.keys())
     for name, threshold in DEFAULT_THRESHOLDS.items():
-        assert (
-            0.0 < threshold < 1.0
-        ), f"Threshold for {name} must be between 0 and 1, got {threshold}"
+        assert 0.0 < threshold < 1.0, (
+            f"Threshold for {name} must be between 0 and 1, got {threshold}"
+        )
 
 
 def test_cosine_similarity_identical_vectors():

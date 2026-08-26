@@ -81,9 +81,9 @@ def test_retrieve_with_filter_returns_only_matching_documents(
     )
     assert len(results) > 0
     for result in results:
-        assert (
-            result["document_id"] == "doc1"
-        ), f"Filter failed  got document_id={result['document_id']}, expected doc1"
+        assert result["document_id"] == "doc1", (
+            f"Filter failed  got document_id={result['document_id']}, expected doc1"
+        )
 
 
 @pytest.mark.slow
@@ -92,6 +92,6 @@ def test_retrieve_most_relevant_result_is_top_ranked(seeded_vector_store, embedd
     results = retriever.retrieve("What is the refund policy?", top_k=3)
     assert len(results) >= 1
     top_result = results[0]
-    assert (
-        "refund" in top_result["content"].lower()
-    ), f"Expected refund-related content at top, got: '{top_result['content']}'"
+    assert "refund" in top_result["content"].lower(), (
+        f"Expected refund-related content at top, got: '{top_result['content']}'"
+    )

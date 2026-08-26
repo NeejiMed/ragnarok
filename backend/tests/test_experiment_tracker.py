@@ -111,5 +111,5 @@ def test_run_embedding_experiment_logs_model_name(mock_mlflow):
     ]
     latency_logged = any("retrieval_latency_ms" in metrics for metrics in all_metric_dicts)
     assert latency_logged, (
-        f"Expected retrieval_latency_ms in logged metrics. " f"Got: {all_metric_dicts}"
+        f"Expected retrieval_latency_ms in logged metrics. Got: {all_metric_dicts}"
     )
