@@ -1,0 +1,13 @@
+.venv/
+.git/
+.github/
+__pycache__/
+*.egg-info/
+*.pyc
+.env
+data/uploads/
+qdrant_storage/
+.mlflow/
+*.log
+notebooks/
+.pytest_cache/

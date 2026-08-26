@@ -1,6 +1,5 @@
-from unittest.mock import patch, MagicMock
-import pytest
 from fastapi.testclient import TestClient
+
 from backend.app.main import app
 
 client = TestClient(app)
@@ -33,8 +32,6 @@ def test_health_endpoint_increments_request_counter():
     """
     ragnarok_requests_total must increment after a successful request.
     """
-    # Get baseline
-    before = client.get("/metrics").text
 
     # Make a request
     client.get("/health")
