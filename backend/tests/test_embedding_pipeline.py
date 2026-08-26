@@ -105,6 +105,6 @@ def test_semantic_similarity_sanity(embedding_pipeline):
     sim_score = cosine_similarity(similar[0].embedding, similar[1].embedding)
     dissim_score = cosine_similarity(dissimilar[0].embedding, dissimilar[1].embedding)
 
-    assert (
-        sim_score > dissim_score
-    ), f"Expected similar pair ({sim_score:.3f}) > dissimilar pair ({dissim_score:.3f})"
+    assert sim_score > dissim_score, (
+        f"Expected similar pair ({sim_score:.3f}) > dissimilar pair ({dissim_score:.3f})"
+    )

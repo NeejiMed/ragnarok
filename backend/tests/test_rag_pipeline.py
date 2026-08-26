@@ -185,7 +185,7 @@ def test_rag_pipeline_empty_retrieval_sends_fallback_in_prompt(
     ):
         mock_llm = MagicMock()
         mock_llm.invoke.return_value = (
-            "I don't have enough information in the available documents " "to answer this question."
+            "I don't have enough information in the available documents to answer this question."
         )
         mock_llm_class.return_value = mock_llm
         mock_reranker_class.return_value = MagicMock()
