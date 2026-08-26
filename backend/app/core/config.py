@@ -6,7 +6,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 def _default_tesseract_cmd() -> str:
     if sys.platform == "win32":
         return r"C:\Program Files\Tesseract-OCR\tesseract.exe"
-    return "tesseract"  
+    return "tesseract"
 
 
 class Settings(BaseSettings):
