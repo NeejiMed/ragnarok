@@ -52,6 +52,8 @@ jobs:
 
       - name: Run fast test suite
         run: python -m pytest backend/tests/ -v -m "not slow" --tb=short
+        env:
+          TESSERACT_CMD: /usr/bin/tesseract
 
   build:
     name: Build Docker image
